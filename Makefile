@@ -7,7 +7,7 @@ GTK_LIBS = $(shell $(PKG_CONFIG) --libs gtk+-3.0)
 CFLAGS := $(CFLAGS) -Wall -std=gnu11
 LDFLAGS := 
 
-all: gtk-css.so
+all: gtk-css-sys.so
 
 %.so: %.o
 	$(LD) -shared $(LDFLAGS) $(GTK_LIBS) -o $@ $<
@@ -18,5 +18,5 @@ all: gtk-css.so
 .PHONY: clean
 
 clean:
-	rm -f gtk-css.so gtk-css.o
+	rm -f gtk-css-sys.so
 
