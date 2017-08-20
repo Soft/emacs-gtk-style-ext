@@ -29,7 +29,9 @@ argument.
 
 The last command will install the shared library and the associated elisp helper
 module into your system-wide site-lisp directory (likely
-`/usr/share/emacs/site-lisp`).
+`/usr/share/emacs/site-lisp`). If you do not wish to install the library system
+wide, just make sure `gtk-style-ext.el` and the compiled `gtk-style-ext-sys.so`
+are in Emacs `load-path`.
 
 ## Dependencies
 

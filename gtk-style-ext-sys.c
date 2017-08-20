@@ -18,13 +18,10 @@ Boston, MA 02111-1307, USA.
 */
 
 #include <stdlib.h>
-#include <assert.h>
 #include <stdbool.h>
 
 #include <gtk/gtk.h>
 #include <emacs-module.h>
-
-#include <stdio.h>
 
 int plugin_is_GPL_compatible;
 
@@ -92,7 +89,7 @@ static emacs_value gtk_style_ext_sys_load_from_string(emacs_env *env,
   free(source_buf);
 
   if (load_error != NULL) {
-    printf("Error: %s", load_error->message);
+    // TODO: Return error
     g_error_free(load_error);
     return emacs_nil;
   }
