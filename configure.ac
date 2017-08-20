@@ -24,9 +24,9 @@ AS_IF([test "x$EMACS_SOURCES" = "x"],
       EMACS_SOURCES="$(emacs -q --batch --eval "(require 'find-func)" --eval "(message \"%s\" find-function-C-source-directory)" 2>&1)"
       AS_IF([test "x$EMACS_SOURCES" = "xnil"],
         [AC_MSG_RESULT([no])
-         AC_MSG_FAILURE([could not find Emacs source code])],
+         AC_MSG_FAILURE([could not find Emacs source code. To specify source code location manually run ./configure EMACS_SOURCES=path-to-emacs-sources.])],
         [AC_MSG_RESULT([yes])])],
-     [AC_MSG_FAILURE([automatic detection could not find Emacs source code])])],
+     [AC_MSG_FAILURE([could not find Emacs for automatic source code location. To specify source code location manually run ./configure EMACS_SOURCES=path-to-emacs-sources.])])],
   [])
 
 dnl Check that the module header is available.
@@ -34,7 +34,7 @@ SAVED_CFLAGS="$CFLAGS"
 SAVED_CPPFLAGS="$CPPFLAGS"
 CFLAGS="-I$EMACS_SOURCES"
 CPPFLAGS="-I$EMACS_SOURCES"
-AC_CHECK_HEADER([emacs-module.h], [], [AC_MSG_ERROR([could not find emacs-module.h])])
+AC_CHECK_HEADER([emacs-module.h], [], [AC_MSG_ERROR([could not find emacs-module.h. Is EMACS_SOURCES specified correctly?])])
 CFLAGS="$SAVED_CFLAGS"
 CPPFLAGS="$SAVED_CPPFLAGS"
 
