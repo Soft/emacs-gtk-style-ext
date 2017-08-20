@@ -1,5 +1,5 @@
  [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-# gtk-style-ext
+# gtk-style-ext 🍬
 
 `gtk-style-ext` provides extra control over Emacs' gtk front-end's look and
 feel. To be more specific it allows you to:
@@ -22,10 +22,6 @@ argument.
     $ ./autogen.sh
     $ ./configure # Or ./configure EMACS_SOURCES=path-to-emacs-sources
     $ make
-
-## Obtaining Headers
-
-TODO
 
 ## Dependencies
 
