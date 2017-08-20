@@ -34,7 +34,7 @@ argument.
     ;; Enable dark theme variant
     (gtk-style-ext-dark-theme-mode 1)
     ;; Load CSS from a file
-    (gtk-style-ext-load-from-file "/path/to/styles.css)
+    (gtk-style-ext-load-from-file "/path/to/styles.css")
     ;; Load CSS from a string
     (gtk-style-ext-load-from-string "menubar { background-color: #00ff00; }")
 
