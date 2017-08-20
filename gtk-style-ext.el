@@ -1,4 +1,4 @@
-;;; gtk-style-ext.el --- Apply Gtk's application-level CSS to Emacs.
+;;; gtk-style-ext.el --- Extra control over gtk front-end's styles.
 
 ;; Copyright (C) 2017 Samuel Laurén <samuel.lauren@iki.fi>
 
@@ -27,13 +27,13 @@
 
 ;;;###autoload
 (defun gtk-style-ext-load-from-string (string)
-  "Load Gtk CSS from STRING."
+  "Load gtk CSS from STRING."
   (gtk-style-ext-sys-load-from-string string))
 
 
 ;;;###autoload
 (defun gtk-style-ext-load-from-file (path)
-  "Load Gtk CSS from PATH."
+  "Load gtk CSS from PATH."
   (with-temp-buffer
     (insert-file-contents-literally path)
     (gtk-style-ext-load-from-string (buffer-string))))

@@ -1,13 +1,13 @@
  [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 # gtk-style-ext 🍬
 
-`gtk-style-ext` provides extra control over Emacs' gtk front-end's look and
-feel. To be more specific it allows you to:
+`gtk-style-ext` provides extra control over Emacs' gtk front-end's style. To be
+more specific it allows you to:
 
 - __Switch to gtk's dark theme variant__ on the fly.
 - __Load additional application-level CSS into Emacs__. This allows nearly
-  limitless styling of Emacs' user interface components. Think of nyan casts on
-  the menu bar or tool bar backgrounds that depend on the major mode.
+  limitless styling of Emacs' user interface components. Think of Nyan cats on
+  the menu bar or tool bar backgrounds that depend on the active major mode.
 
 ## Installation
 
@@ -30,7 +30,13 @@ argument.
 
 ## Usage
 
-TODO
+    (require 'gtk-style-ext)
+    ;; Enable dark theme variant
+    (gtk-style-ext-dark-theme-mode 1)
+    ;; Load CSS from a file
+    (gtk-style-ext-load-from-file "/path/to/styles.css)
+    ;; Load CSS from a string
+    (gtk-style-ext-load-from-string "menubar { background-color: #00ff00; }")
 
 ## License
 
