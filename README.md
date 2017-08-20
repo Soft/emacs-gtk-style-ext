@@ -20,14 +20,14 @@ the configure script tries to find the required headers automatically, but if
 this fails, path to them can be passed to it manually using the `EMACS_SOURCES`
 argument.
 
-    $ git clone git clone https://bitbucket.org/Soft/emacs-gtk-style-ext.git
-    $ cd emacs-gtk-style-ext
-    $ ./autogen.sh
-    $ ./configure # Or ./configure EMACS_SOURCES=path-to-emacs-sources
-    $ make
-    $ sudo make install
+    git clone https://bitbucket.org/Soft/emacs-gtk-style-ext.git
+    cd emacs-gtk-style-ext
+    ./autogen.sh
+    ./configure # Or ./configure EMACS_SOURCES=path-to-emacs-sources
+    make
+    sudo make install
 
-The last command will install the shared library and the associated Elisp helper
+The last command will install the shared library and the associated elisp helper
 module into your system-wide site-lisp directory (likely
 `/usr/share/emacs/site-lisp`).
 

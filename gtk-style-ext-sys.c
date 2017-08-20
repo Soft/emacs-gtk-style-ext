@@ -47,8 +47,13 @@ static emacs_value gtk_style_ext_sys_prefer_dark_theme(emacs_env *env,
                                                  ptrdiff_t n,
                                                  emacs_value *args,
                                                  void *ptr) {
+  GtkSettings *settings = gtk_settings_get_default();
+  if (settings == NULL) {
+    return emacs_nil;
+  }
+
   bool preference = env->is_not_nil(env, args[0]);
-  g_object_set(gtk_settings_get_default(), "gtk-application-prefer-dark-theme", preference, NULL);
+  g_object_set(settings, "gtk-application-prefer-dark-theme", preference, NULL);
   return emacs_t;
 }
 
@@ -56,8 +61,13 @@ static emacs_value gtk_style_ext_sys_prefer_dark_theme_p(emacs_env *env,
                                                  ptrdiff_t n,
                                                  emacs_value *args,
                                                  void *ptr) {
+  GtkSettings *settings = gtk_settings_get_default();
+  if (settings == NULL) {
+    return emacs_nil;
+  }
+
   gboolean preference = false;
-  g_object_get(gtk_settings_get_default(), "gtk-application-prefer-dark-theme", &preference, NULL);
+  g_object_get(settings, "gtk-application-prefer-dark-theme", &preference, NULL);
   return preference ? emacs_t : emacs_nil;
 }
 
@@ -66,7 +76,7 @@ static emacs_value gtk_style_ext_sys_load_from_string(emacs_env *env,
                                      emacs_value *args,
                                      void *ptr) {
   if (css_provider == NULL) {
-    return emacs_nil;
+    return emacs_nil; // It would be better to raise an error
   }
 
   GError *load_error = NULL;
