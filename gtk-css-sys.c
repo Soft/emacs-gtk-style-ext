@@ -19,6 +19,7 @@ Boston, MA 02111-1307, USA.
 
 #include <stdlib.h>
 #include <assert.h>
+#include <stdbool.h>
 
 #include <gtk/gtk.h>
 #include <emacs-module.h>
@@ -31,9 +32,34 @@ int plugin_is_GPL_compatible;
   "(gtk-css-sys-load-from_string STRING)\n\n" \
   "Load Gtk CSS from STRING."
 
+#define GTK_CSS_SYS_PREFER_DARK_THEME_DOC \
+  "(gtk-css-sys-prefer-dark-theme ARG)\n\n" \
+  "Request for dark Gtk theme variant. If ARG is non-nil, Emacs will request for a dark theme."
+
+#define GTK_CSS_SYS_PREFER_DARK_THEME_P_DOC \
+  "(gtk-css-sys-prefer-dark-theme-p)"
+
 static emacs_value emacs_nil;
 static emacs_value emacs_t;
 static GtkCssProvider *css_provider; // Maybe having this as a global isn't the best idea.
+
+static emacs_value gtk_css_sys_prefer_dark_theme(emacs_env *env,
+                                                 ptrdiff_t n,
+                                                 emacs_value *args,
+                                                 void *ptr) {
+  bool preference = env->is_not_nil(env, args[0]);
+  g_object_set(gtk_settings_get_default(), "gtk-application-prefer-dark-theme", preference, NULL);
+  return emacs_t;
+}
+
+static emacs_value gtk_css_sys_prefer_dark_theme_p(emacs_env *env,
+                                                 ptrdiff_t n,
+                                                 emacs_value *args,
+                                                 void *ptr) {
+  gboolean preference = false;
+  g_object_get(gtk_settings_get_default(), "gtk-application-prefer-dark-theme", &preference, NULL);
+  return preference ? emacs_t : emacs_nil;
+}
 
 static emacs_value gtk_css_sys_load_from_string(emacs_env *env,
                                      ptrdiff_t n,
@@ -85,9 +111,20 @@ int emacs_module_init(struct emacs_runtime *ert) {
 
   emacs_value fset = env->intern(env, "fset");
   emacs_value args[2];
+
   args[0] = env->intern(env, "gtk-css-sys-load-from-string");
   args[1] = env->make_function(env, 1, 1, gtk_css_sys_load_from_string,
                                GTK_CSS_SYS_LOAD_FROM_STRING_DOC, NULL);
+  env->funcall(env, fset, 2, args);
+
+  args[0] = env->intern(env, "gtk-css-sys-prefer-dark-theme");
+  args[1] = env->make_function(env, 1, 1, gtk_css_sys_prefer_dark_theme,
+                               GTK_CSS_SYS_PREFER_DARK_THEME_DOC, NULL);
+  env->funcall(env, fset, 2, args);
+
+  args[0] = env->intern(env, "gtk-css-sys-prefer-dark-theme-p");
+  args[1] = env->make_function(env, 0, 0, gtk_css_sys_prefer_dark_theme_p,
+                               GTK_CSS_SYS_PREFER_DARK_THEME_P_DOC, NULL);
   env->funcall(env, fset, 2, args);
 
   emacs_value provide = env->intern(env, "provide");

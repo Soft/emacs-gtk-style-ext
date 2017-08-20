@@ -22,21 +22,12 @@
 ;; the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 ;; Boston, MA 02111-1307, USA.
 
-(defun gtk-css--load-module ()
-  (unless (featurep 'gtk-css-sys)
-    (if (and (featurep 'gtk)
-             (string-prefix-p "3." gtk-version-string))
-        (require 'gtk-css-sys)
-      (error "Cannot load gtk-css: gtk3 version of Emacs required"))))
+(require 'gtk-css-sys)
 
-;;;###autoload
-(defun gtk-css-compile-module ()
-  nil)
 
 ;;;###autoload
 (defun gtk-css-load-from-string (string)
   "Load Gtk CSS from STRING."
-  (gtk-css--load-module)
   (gtk-css-sys-load-from-string string))
 
 
@@ -46,6 +37,19 @@
   (with-temp-buffer
     (insert-file-contents-literally path)
     (gtk-css-load-from-string (buffer-string))))
+
+
+;;;###autoload
+(define-minor-mode gtk-css-dark-theme-mode
+  "Toggle preference for Gtk's dark theme variant.
+With a prefix argument ARG, enable Dark Theme mode if ARG is
+positive, and disable it otherwise. If called from Lisp, enable
+the mode if ARG is omitted or nil.
+
+This command applies to all frames that exist and frames to be
+created in the future."
+  :variable ((gtk-css-sys-prefer-dark-theme-p)
+             . (lambda (v) (gtk-css-sys-prefer-dark-theme v))))
 
 
 (provide 'gtk-css)

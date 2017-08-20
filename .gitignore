@@ -2,11 +2,11 @@
 *.so
 *.la
 *.lo
+*.tar.gz
 test.css
 nyan/*
 
 # autotools
-
 .deps
 .libs
 Makefile.in
