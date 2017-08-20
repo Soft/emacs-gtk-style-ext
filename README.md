@@ -9,6 +9,9 @@ more specific it allows you to:
   limitless styling of Emacs' user interface components. Think of Nyan cats on
   the menu bar or tool bar backgrounds that depend on the active major mode.
 
+It is worth noting that `gtk-style-ext` is still experimental and might break
+things.
+
 ## Installation
 
 `gtk-style-ext` requires a native module that has to be build separately. This
@@ -22,6 +25,11 @@ argument.
     $ ./autogen.sh
     $ ./configure # Or ./configure EMACS_SOURCES=path-to-emacs-sources
     $ make
+    $ sudo make install
+
+The last command will install the shared library and the associated Elisp helper
+module into your system-wide site-lisp directory (likely
+`/usr/share/emacs/site-lisp`).
 
 ## Dependencies
 

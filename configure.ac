@@ -12,6 +12,9 @@ PKG_CHECK_MODULES([GTK], [gtk+-3.0], [], [AC_MSG_ERROR([gtk+3.0 required])])
 
 AC_HEADER_STDBOOL
 
+dnl /usr/local would be cleaner but /usr/local/share/emacs doesn't seem to be common in practice
+AC_PREFIX_DEFAULT([/usr])
+
 AM_PATH_LISPDIR
 
 AS_IF([test "x$lispdir" = "x"],

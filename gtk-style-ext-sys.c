@@ -41,7 +41,7 @@ int plugin_is_GPL_compatible;
 
 static emacs_value emacs_nil;
 static emacs_value emacs_t;
-static GtkCssProvider *css_provider; // Maybe having this as a global isn't the best idea.
+static GtkCssProvider *css_provider = NULL; // Maybe having this as a global isn't the best idea.
 
 static emacs_value gtk_style_ext_sys_prefer_dark_theme(emacs_env *env,
                                                  ptrdiff_t n,
@@ -65,6 +65,9 @@ static emacs_value gtk_style_ext_sys_load_from_string(emacs_env *env,
                                      ptrdiff_t n,
                                      emacs_value *args,
                                      void *ptr) {
+  if (css_provider == NULL) {
+    return emacs_nil;
+  }
 
   GError *load_error = NULL;
   char *source_buf = NULL;
@@ -87,10 +90,12 @@ static emacs_value gtk_style_ext_sys_load_from_string(emacs_env *env,
   return emacs_t;
 }
 
-static void setup_css_provider(void) {
+static bool setup_css_provider(void) {
   GdkDisplay *display = gdk_display_get_default();
-  // FIXME: This is bad
-  assert(display != NULL);
+  if (display == NULL) {
+    return false;
+  }
+
   GdkScreen *screen = gdk_display_get_default_screen(display);
 
   css_provider = gtk_css_provider_new();
@@ -98,6 +103,7 @@ static void setup_css_provider(void) {
   gtk_style_context_add_provider_for_screen(screen,
                                             GTK_STYLE_PROVIDER(css_provider),
                                             GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+  return true;
 }
 
 int emacs_module_init(struct emacs_runtime *ert) {
