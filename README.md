@@ -1,4 +1,3 @@
-# gtk-css.el
+# gtk-style-ext
 
-Apply Gtk's application-level CSS styles to Emacs.
-
+Apply Gtk's application-level CSS to Emacs.

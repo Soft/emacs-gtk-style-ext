@@ -1,5 +1,5 @@
 AC_PREREQ([2.69])
-AC_INIT([emacs-gtk-css], [0.1], [samuel.lauren@iki.fi])
+AC_INIT([emacs-style-ext], [0.1], [samuel.lauren@iki.fi])
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE
 AC_LANG([C])

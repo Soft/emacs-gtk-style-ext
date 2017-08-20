@@ -1,4 +1,4 @@
-;;; gtk-css.el --- Apply Gtk's application-level CSS styles to Emacs.
+;;; gtk-style-ext.el --- Apply Gtk's application-level CSS to Emacs.
 
 ;; Copyright (C) 2017 Samuel Laurén <samuel.lauren@iki.fi>
 
@@ -22,25 +22,25 @@
 ;; the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 ;; Boston, MA 02111-1307, USA.
 
-(require 'gtk-css-sys)
+(require 'gtk-style-ext-sys)
 
 
 ;;;###autoload
-(defun gtk-css-load-from-string (string)
+(defun gtk-style-ext-load-from-string (string)
   "Load Gtk CSS from STRING."
-  (gtk-css-sys-load-from-string string))
+  (gtk-style-ext-sys-load-from-string string))
 
 
 ;;;###autoload
-(defun gtk-css-load-from-file (path)
+(defun gtk-style-ext-load-from-file (path)
   "Load Gtk CSS from PATH."
   (with-temp-buffer
     (insert-file-contents-literally path)
-    (gtk-css-load-from-string (buffer-string))))
+    (gtk-style-ext-load-from-string (buffer-string))))
 
 
 ;;;###autoload
-(define-minor-mode gtk-css-dark-theme-mode
+(define-minor-mode gtk-style-ext-dark-theme-mode
   "Toggle preference for Gtk's dark theme variant.
 With a prefix argument ARG, enable Dark Theme mode if ARG is
 positive, and disable it otherwise. If called from Lisp, enable
@@ -48,9 +48,9 @@ the mode if ARG is omitted or nil.
 
 This command applies to all frames that exist and frames to be
 created in the future."
-  :variable ((gtk-css-sys-prefer-dark-theme-p)
-             . (lambda (v) (gtk-css-sys-prefer-dark-theme v))))
+  :variable ((gtk-style-ext-sys-prefer-dark-theme-p)
+             . (lambda (v) (gtk-style-ext-sys-prefer-dark-theme v))))
 
 
-(provide 'gtk-css)
+(provide 'gtk-style-ext)
 

@@ -28,22 +28,22 @@ Boston, MA 02111-1307, USA.
 
 int plugin_is_GPL_compatible;
 
-#define GTK_CSS_SYS_LOAD_FROM_STRING_DOC \
-  "(gtk-css-sys-load-from_string STRING)\n\n" \
+#define GTK_STYLE_EXT_SYS_LOAD_FROM_STRING_DOC \
+  "(gtk-style-ext-sys-load-from_string STRING)\n\n" \
   "Load Gtk CSS from STRING."
 
-#define GTK_CSS_SYS_PREFER_DARK_THEME_DOC \
-  "(gtk-css-sys-prefer-dark-theme ARG)\n\n" \
+#define GTK_STYLE_EXT_SYS_PREFER_DARK_THEME_DOC \
+  "(gtk-style-ext-sys-prefer-dark-theme ARG)\n\n" \
   "Request for dark Gtk theme variant. If ARG is non-nil, Emacs will request for a dark theme."
 
-#define GTK_CSS_SYS_PREFER_DARK_THEME_P_DOC \
-  "(gtk-css-sys-prefer-dark-theme-p)"
+#define GTK_STYLE_EXT_SYS_PREFER_DARK_THEME_P_DOC \
+  "(gtk-style-ext-sys-prefer-dark-theme-p)"
 
 static emacs_value emacs_nil;
 static emacs_value emacs_t;
 static GtkCssProvider *css_provider; // Maybe having this as a global isn't the best idea.
 
-static emacs_value gtk_css_sys_prefer_dark_theme(emacs_env *env,
+static emacs_value gtk_style_ext_sys_prefer_dark_theme(emacs_env *env,
                                                  ptrdiff_t n,
                                                  emacs_value *args,
                                                  void *ptr) {
@@ -52,7 +52,7 @@ static emacs_value gtk_css_sys_prefer_dark_theme(emacs_env *env,
   return emacs_t;
 }
 
-static emacs_value gtk_css_sys_prefer_dark_theme_p(emacs_env *env,
+static emacs_value gtk_style_ext_sys_prefer_dark_theme_p(emacs_env *env,
                                                  ptrdiff_t n,
                                                  emacs_value *args,
                                                  void *ptr) {
@@ -61,7 +61,7 @@ static emacs_value gtk_css_sys_prefer_dark_theme_p(emacs_env *env,
   return preference ? emacs_t : emacs_nil;
 }
 
-static emacs_value gtk_css_sys_load_from_string(emacs_env *env,
+static emacs_value gtk_style_ext_sys_load_from_string(emacs_env *env,
                                      ptrdiff_t n,
                                      emacs_value *args,
                                      void *ptr) {
@@ -87,9 +87,9 @@ static emacs_value gtk_css_sys_load_from_string(emacs_env *env,
   return emacs_t;
 }
 
-// FIXME: How should we get display
 static void setup_css_provider(void) {
   GdkDisplay *display = gdk_display_get_default();
+  // FIXME: This is bad
   assert(display != NULL);
   GdkScreen *screen = gdk_display_get_default_screen(display);
 
@@ -112,24 +112,24 @@ int emacs_module_init(struct emacs_runtime *ert) {
   emacs_value fset = env->intern(env, "fset");
   emacs_value args[2];
 
-  args[0] = env->intern(env, "gtk-css-sys-load-from-string");
-  args[1] = env->make_function(env, 1, 1, gtk_css_sys_load_from_string,
-                               GTK_CSS_SYS_LOAD_FROM_STRING_DOC, NULL);
+  args[0] = env->intern(env, "gtk-style-ext-sys-load-from-string");
+  args[1] = env->make_function(env, 1, 1, gtk_style_ext_sys_load_from_string,
+                               GTK_STYLE_EXT_SYS_LOAD_FROM_STRING_DOC, NULL);
   env->funcall(env, fset, 2, args);
 
-  args[0] = env->intern(env, "gtk-css-sys-prefer-dark-theme");
-  args[1] = env->make_function(env, 1, 1, gtk_css_sys_prefer_dark_theme,
-                               GTK_CSS_SYS_PREFER_DARK_THEME_DOC, NULL);
+  args[0] = env->intern(env, "gtk-style-ext-sys-prefer-dark-theme");
+  args[1] = env->make_function(env, 1, 1, gtk_style_ext_sys_prefer_dark_theme,
+                               GTK_STYLE_EXT_SYS_PREFER_DARK_THEME_DOC, NULL);
   env->funcall(env, fset, 2, args);
 
-  args[0] = env->intern(env, "gtk-css-sys-prefer-dark-theme-p");
-  args[1] = env->make_function(env, 0, 0, gtk_css_sys_prefer_dark_theme_p,
-                               GTK_CSS_SYS_PREFER_DARK_THEME_P_DOC, NULL);
+  args[0] = env->intern(env, "gtk-style-ext-sys-prefer-dark-theme-p");
+  args[1] = env->make_function(env, 0, 0, gtk_style_ext_sys_prefer_dark_theme_p,
+                               GTK_STYLE_EXT_SYS_PREFER_DARK_THEME_P_DOC, NULL);
   env->funcall(env, fset, 2, args);
 
   emacs_value provide = env->intern(env, "provide");
-  emacs_value gtk_css_sys = env->intern(env, "gtk-css-sys");
-  env->funcall(env, provide, 1, &gtk_css_sys);
+  emacs_value gtk_style_ext_sys = env->intern(env, "gtk-style-ext-sys");
+  env->funcall(env, provide, 1, &gtk_style_ext_sys);
   
   return 0;
 }
