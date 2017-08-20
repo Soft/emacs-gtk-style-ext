@@ -10,6 +10,8 @@ LT_SYS_MODULE_EXT
 
 PKG_CHECK_MODULES([GTK], [gtk+-3.0], [], [AC_MSG_ERROR([gtk+3.0 required])])
 
+AC_HEADER_STDBOOL
+
 AC_ARG_VAR([EMACS_SOURCES], [Emacs source code path])
 
 AS_IF([test "x$EMACS_SOURCES" = "x"],
