@@ -17,8 +17,6 @@ along with GNU Emacs; see the file COPYING. If not, write to
 the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA. */
 
-// FIXME: We could keep track of valid user pointers.
-
 #include <stdlib.h>
 #include <stdbool.h>
 
@@ -26,6 +24,9 @@ Boston, MA 02111-1307, USA. */
 #include <emacs-module.h>
 
 int plugin_is_GPL_compatible;
+
+// We keep track of user pointers that belong to us.
+static GHashTable *providers;
 
 #define GTK_STYLE_EXT_SYS_CREATE_PROVIDER_DOC \
   "(gtk-style-ext-sys-create-provider)\n\n" \
@@ -48,6 +49,8 @@ int plugin_is_GPL_compatible;
 
 static emacs_value emacs_nil;
 static emacs_value emacs_t;
+
+// Dark Theme
 
 static emacs_value gtk_style_ext_sys_prefer_dark_theme(emacs_env *env,
                                                  ptrdiff_t n,
@@ -77,7 +80,10 @@ static emacs_value gtk_style_ext_sys_prefer_dark_theme_p(emacs_env *env,
   return preference ? emacs_t : emacs_nil;
 }
 
+// Style Provider
+
 static void provider_unref(void *ptr) {
+  g_hash_table_remove(providers, ptr);
   g_object_unref(ptr);
 }
 
@@ -87,6 +93,7 @@ static emacs_value gtk_style_ext_sys_create_provider(emacs_env *env,
                                                      emacs_value *args,
                                                      void *ptr) {
   GtkCssProvider *provider = gtk_css_provider_new();
+  g_hash_table_add(providers, provider);
   env->make_user_ptr(env, provider_unref, (void *)provider);
 }
 
@@ -95,6 +102,11 @@ static emacs_value gtk_style_ext_sys_provider_activate(emacs_env *env,
                                                        emacs_value *args,
                                                        void *ptr) {
   GtkCssProvider *provider = (GtkCssProvider *)env->get_user_ptr(env, args[0]);
+  if (!g_hash_table_contains(providers, provider)) {
+    // TODO: Return error
+    return emacs_nil;
+  }
+
   int priority = env->extract_integer(env, args[1]);
 
   GdkDisplay *display = gdk_display_get_default();
@@ -116,6 +128,10 @@ static emacs_value gtk_style_ext_sys_provider_load_from_string(emacs_env *env,
                                                                emacs_value *args,
                                                                void *ptr) {
   GtkCssProvider *provider = (GtkCssProvider *)env->get_user_ptr(env, args[0]);
+  if (!g_hash_table_contains(providers, provider)) {
+    // TODO: Return error
+    return emacs_nil;
+  }
 
   GError *load_error = NULL;
   char *style_buf = NULL;
@@ -159,23 +175,6 @@ static void make_int_constants(emacs_env *env, size_t len, struct constant_int d
   }
 }
 
-static void make_int_constant(emacs_env *env, const char *name, int value) {
-  emacs_value eval = env->intern(env, "eval");
-  emacs_value list = env->intern(env, "list");
-  emacs_value defconst = env->intern(env, "defconst");
-  emacs_value name_val = env->intern(env, name);
-  emacs_value int_val = env->make_integer(env, value);
-  emacs_value list_args[3], eval_args[1];
-
-  list_args[0] = defconst;
-  list_args[1] = name_val;
-  list_args[2] = int_val;
-  emacs_value list_val = env->funcall(env, list, 3, list_args);
-
-  eval_args[0] = list_val;
-  env->funcall(env, eval, 1, eval_args);
-}
-
 int emacs_module_init(struct emacs_runtime *ert) {
   emacs_env *env = ert->get_environment(ert);
 
@@ -185,6 +184,8 @@ int emacs_module_init(struct emacs_runtime *ert) {
   emacs_value fset = env->intern(env, "fset");
   emacs_value defconst = env->intern(env, "defconst");
   emacs_value args[2];
+
+  providers = g_hash_table_new(NULL, NULL);
 
   // Functions
 
