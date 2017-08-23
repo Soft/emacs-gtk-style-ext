@@ -155,6 +155,24 @@ static emacs_value gtk_style_ext_sys_provider_load_from_string(emacs_env *env,
   return emacs_t;
 }
 
+struct function {
+  const char *name;
+  const char *doc;
+  emacs_value (*ptr)(emacs_env *, ptrdiff_t, emacs_value *, void *);
+  int arg_count;
+};
+
+static void make_functions(emacs_env *env, size_t len, struct function defs[]) {
+  emacs_value fset = env->intern(env, "fset");
+  emacs_value args[2];
+
+  for (size_t i = 0; i < len; i++) {
+    args[0] = env->intern(env, defs[i].name);
+    args[1] = env->make_function(env, defs[i].arg_count, defs[i].arg_count, defs[i].ptr, defs[i].doc, NULL);
+    env->funcall(env, fset, 2, args);
+  }
+}
+
 struct constant_int {
   const char *name;
   int value;
@@ -164,55 +182,32 @@ static void make_int_constants(emacs_env *env, size_t len, struct constant_int d
   emacs_value eval = env->intern(env, "eval");
   emacs_value list = env->intern(env, "list");
   emacs_value defconst = env->intern(env, "defconst");
-  emacs_value list_args[3], eval_args[1], list_val;
+  emacs_value list_args[3], list_val;
   list_args[0] = defconst;
   for (size_t i = 0; i < len; i++) {
     list_args[1] = env->intern(env, defs[i].name);
     list_args[2] = env->make_integer(env, defs[i].value);
     list_val = env->funcall(env, list, 3, list_args);
-    eval_args[0] = list_val;
-    env->funcall(env, eval, 1, eval_args);
+    env->funcall(env, eval, 1, &list_val);
   }
 }
 
 int emacs_module_init(struct emacs_runtime *ert) {
   emacs_env *env = ert->get_environment(ert);
 
+  providers = g_hash_table_new(NULL, NULL);
   emacs_nil = env->intern(env, "nil");
   emacs_t = env->intern(env, "t");
 
-  emacs_value fset = env->intern(env, "fset");
-  emacs_value defconst = env->intern(env, "defconst");
-  emacs_value args[2];
-
-  providers = g_hash_table_new(NULL, NULL);
-
   // Functions
 
-  args[0] = env->intern(env, "gtk-style-ext-sys-create-provider");
-  args[1] = env->make_function(env, 0, 0, gtk_style_ext_sys_create_provider,
-                               GTK_STYLE_EXT_SYS_CREATE_PROVIDER_DOC, NULL);
-  env->funcall(env, fset, 2, args);
-
-  args[0] = env->intern(env, "gtk-style-ext-sys-provider-load-from-string");
-  args[1] = env->make_function(env, 2, 2, gtk_style_ext_sys_provider_load_from_string,
-                               GTK_STYLE_EXT_SYS_PROVIDER_LOAD_FROM_STRING_DOC, NULL);
-  env->funcall(env, fset, 2, args);
-
-  args[0] = env->intern(env, "gtk-style-ext-sys-provider-activate");
-  args[1] = env->make_function(env, 2, 2, gtk_style_ext_sys_provider_activate,
-                               GTK_STYLE_EXT_SYS_PROVIDER_ACTIVATE_DOC, NULL);
-  env->funcall(env, fset, 2, args);
-
-  args[0] = env->intern(env, "gtk-style-ext-sys-prefer-dark-theme");
-  args[1] = env->make_function(env, 1, 1, gtk_style_ext_sys_prefer_dark_theme,
-                               GTK_STYLE_EXT_SYS_PREFER_DARK_THEME_DOC, NULL);
-  env->funcall(env, fset, 2, args);
-
-  args[0] = env->intern(env, "gtk-style-ext-sys-prefer-dark-theme-p");
-  args[1] = env->make_function(env, 0, 0, gtk_style_ext_sys_prefer_dark_theme_p,
-                               GTK_STYLE_EXT_SYS_PREFER_DARK_THEME_P_DOC, NULL);
-  env->funcall(env, fset, 2, args);
+  make_functions(env, 5, (struct function[]){
+      {"gtk-style-ext-sys-create-provider", GTK_STYLE_EXT_SYS_CREATE_PROVIDER_DOC, gtk_style_ext_sys_create_provider, 0},
+      {"gtk-style-ext-sys-provider-load-from-string", GTK_STYLE_EXT_SYS_PROVIDER_LOAD_FROM_STRING_DOC, gtk_style_ext_sys_provider_load_from_string, 2},
+      {"gtk-style-ext-sys-provider-activate", GTK_STYLE_EXT_SYS_PROVIDER_ACTIVATE_DOC, gtk_style_ext_sys_provider_activate, 2},
+      {"gtk-style-ext-sys-prefer-dark-theme", GTK_STYLE_EXT_SYS_PREFER_DARK_THEME_DOC, gtk_style_ext_sys_prefer_dark_theme, 1},
+      {"gtk-style-ext-sys-prefer-dark-theme-p", GTK_STYLE_EXT_SYS_PREFER_DARK_THEME_P_DOC, gtk_style_ext_sys_prefer_dark_theme_p, 0}
+    });
 
   // Constants
 
