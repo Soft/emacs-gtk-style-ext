@@ -1,4 +1,5 @@
-/*
+/* gtk-style-ext-sys.c - Bindings to extra Gtk functionality.
+
 Copyright (C) 2017 Samuel Laurén <samuel.lauren@iki.fi>
 
 This file is free software; you can redistribute it and/or modify
@@ -14,8 +15,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with GNU Emacs; see the file COPYING. If not, write to
 the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.
-*/
+Boston, MA 02111-1307, USA. */
+
+// FIXME: We could keep track of valid user pointers.
 
 #include <stdlib.h>
 #include <stdbool.h>
@@ -25,9 +27,17 @@ Boston, MA 02111-1307, USA.
 
 int plugin_is_GPL_compatible;
 
-#define GTK_STYLE_EXT_SYS_LOAD_FROM_STRING_DOC \
-  "(gtk-style-ext-sys-load-from_string STRING)\n\n" \
-  "Load Gtk CSS from STRING."
+#define GTK_STYLE_EXT_SYS_CREATE_PROVIDER_DOC \
+  "(gtk-style-ext-sys-create-provider)\n\n" \
+  "Create new Gtk Css style provider."
+
+#define GTK_STYLE_EXT_SYS_PROVIDER_LOAD_FROM_STRING_DOC \
+  "(gtk-style-ext-sys-provider-load-from-string PROVIDER STRING)\n\n" \
+  "Load Css STRING into PROVIDER."
+
+#define GTK_STYLE_EXT_SYS_PROVIDER_ACTIVATE_DOC \
+  "(gtk-style-ext-sys-provider-load-from-string PROVIDER PRIORITY)\n\n" \
+  "Activate PROVIDER with PRIORITY."
 
 #define GTK_STYLE_EXT_SYS_PREFER_DARK_THEME_DOC \
   "(gtk-style-ext-sys-prefer-dark-theme ARG)\n\n" \
@@ -38,7 +48,6 @@ int plugin_is_GPL_compatible;
 
 static emacs_value emacs_nil;
 static emacs_value emacs_t;
-static GtkCssProvider *css_provider = NULL; // Maybe having this as a global isn't the best idea.
 
 static emacs_value gtk_style_ext_sys_prefer_dark_theme(emacs_env *env,
                                                  ptrdiff_t n,
@@ -68,28 +77,61 @@ static emacs_value gtk_style_ext_sys_prefer_dark_theme_p(emacs_env *env,
   return preference ? emacs_t : emacs_nil;
 }
 
-static emacs_value gtk_style_ext_sys_load_from_string(emacs_env *env,
-                                     ptrdiff_t n,
-                                     emacs_value *args,
-                                     void *ptr) {
-  if (css_provider == NULL) {
-    return emacs_nil; // It would be better to raise an error
+static void provider_unref(void *ptr) {
+  g_object_unref(ptr);
+}
+
+
+static emacs_value gtk_style_ext_sys_create_provider(emacs_env *env,
+                                                     ptrdiff_t n,
+                                                     emacs_value *args,
+                                                     void *ptr) {
+  GtkCssProvider *provider = gtk_css_provider_new();
+  env->make_user_ptr(env, provider_unref, (void *)provider);
+}
+
+static emacs_value gtk_style_ext_sys_provider_activate(emacs_env *env,
+                                                       ptrdiff_t n,
+                                                       emacs_value *args,
+                                                       void *ptr) {
+  GtkCssProvider *provider = (GtkCssProvider *)env->get_user_ptr(env, args[0]);
+  int priority = env->extract_integer(env, args[1]);
+
+  GdkDisplay *display = gdk_display_get_default();
+  if (display == NULL) {
+    return emacs_nil;
   }
 
+  GdkScreen *screen = gdk_display_get_default_screen(display);
+
+  gtk_style_context_add_provider_for_screen(screen,
+                                            GTK_STYLE_PROVIDER(provider),
+                                            priority);
+
+  return emacs_t;
+}
+
+static emacs_value gtk_style_ext_sys_provider_load_from_string(emacs_env *env,
+                                                               ptrdiff_t n,
+                                                               emacs_value *args,
+                                                               void *ptr) {
+  GtkCssProvider *provider = (GtkCssProvider *)env->get_user_ptr(env, args[0]);
+
   GError *load_error = NULL;
-  char *source_buf = NULL;
-  ptrdiff_t source_buf_size = 0;
+  char *style_buf = NULL;
+  ptrdiff_t style_buf_size = 0;
 
-  env->copy_string_contents(env, args[0], source_buf, &source_buf_size); // Get required buffer size
-  source_buf = malloc(source_buf_size);
-
-  env->copy_string_contents(env, args[0], source_buf, &source_buf_size); // Copy the string
-
-  gtk_css_provider_load_from_data(css_provider, source_buf, -1, &load_error);
-  free(source_buf);
+  // Get required buffer size
+  env->copy_string_contents(env, args[1], style_buf, &style_buf_size);
+  
+  style_buf = malloc(style_buf_size);
+  // Copy the string
+  env->copy_string_contents(env, args[1], style_buf, &style_buf_size);
+  
+  gtk_css_provider_load_from_data(provider, style_buf, -1, &load_error);
+  free(style_buf);
 
   if (load_error != NULL) {
-    // TODO: Return error
     g_error_free(load_error);
     return emacs_nil;
   }
@@ -97,20 +139,41 @@ static emacs_value gtk_style_ext_sys_load_from_string(emacs_env *env,
   return emacs_t;
 }
 
-static bool setup_css_provider(void) {
-  GdkDisplay *display = gdk_display_get_default();
-  if (display == NULL) {
-    return false;
+struct constant_int {
+  const char *name;
+  int value;
+};
+
+static void make_int_constants(emacs_env *env, size_t len, struct constant_int defs[]) {
+  emacs_value eval = env->intern(env, "eval");
+  emacs_value list = env->intern(env, "list");
+  emacs_value defconst = env->intern(env, "defconst");
+  emacs_value list_args[3], eval_args[1], list_val;
+  list_args[0] = defconst;
+  for (size_t i = 0; i < len; i++) {
+    list_args[1] = env->intern(env, defs[i].name);
+    list_args[2] = env->make_integer(env, defs[i].value);
+    list_val = env->funcall(env, list, 3, list_args);
+    eval_args[0] = list_val;
+    env->funcall(env, eval, 1, eval_args);
   }
+}
 
-  GdkScreen *screen = gdk_display_get_default_screen(display);
+static void make_int_constant(emacs_env *env, const char *name, int value) {
+  emacs_value eval = env->intern(env, "eval");
+  emacs_value list = env->intern(env, "list");
+  emacs_value defconst = env->intern(env, "defconst");
+  emacs_value name_val = env->intern(env, name);
+  emacs_value int_val = env->make_integer(env, value);
+  emacs_value list_args[3], eval_args[1];
 
-  css_provider = gtk_css_provider_new();
+  list_args[0] = defconst;
+  list_args[1] = name_val;
+  list_args[2] = int_val;
+  emacs_value list_val = env->funcall(env, list, 3, list_args);
 
-  gtk_style_context_add_provider_for_screen(screen,
-                                            GTK_STYLE_PROVIDER(css_provider),
-                                            GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-  return true;
+  eval_args[0] = list_val;
+  env->funcall(env, eval, 1, eval_args);
 }
 
 int emacs_module_init(struct emacs_runtime *ert) {
@@ -119,15 +182,25 @@ int emacs_module_init(struct emacs_runtime *ert) {
   emacs_nil = env->intern(env, "nil");
   emacs_t = env->intern(env, "t");
 
-  // Hopefully this won't be called multiple times.
-  setup_css_provider();
-
   emacs_value fset = env->intern(env, "fset");
+  emacs_value defconst = env->intern(env, "defconst");
   emacs_value args[2];
 
-  args[0] = env->intern(env, "gtk-style-ext-sys-load-from-string");
-  args[1] = env->make_function(env, 1, 1, gtk_style_ext_sys_load_from_string,
-                               GTK_STYLE_EXT_SYS_LOAD_FROM_STRING_DOC, NULL);
+  // Functions
+
+  args[0] = env->intern(env, "gtk-style-ext-sys-create-provider");
+  args[1] = env->make_function(env, 0, 0, gtk_style_ext_sys_create_provider,
+                               GTK_STYLE_EXT_SYS_CREATE_PROVIDER_DOC, NULL);
+  env->funcall(env, fset, 2, args);
+
+  args[0] = env->intern(env, "gtk-style-ext-sys-provider-load-from-string");
+  args[1] = env->make_function(env, 2, 2, gtk_style_ext_sys_provider_load_from_string,
+                               GTK_STYLE_EXT_SYS_PROVIDER_LOAD_FROM_STRING_DOC, NULL);
+  env->funcall(env, fset, 2, args);
+
+  args[0] = env->intern(env, "gtk-style-ext-sys-provider-activate");
+  args[1] = env->make_function(env, 2, 2, gtk_style_ext_sys_provider_activate,
+                               GTK_STYLE_EXT_SYS_PROVIDER_ACTIVATE_DOC, NULL);
   env->funcall(env, fset, 2, args);
 
   args[0] = env->intern(env, "gtk-style-ext-sys-prefer-dark-theme");
@@ -139,6 +212,18 @@ int emacs_module_init(struct emacs_runtime *ert) {
   args[1] = env->make_function(env, 0, 0, gtk_style_ext_sys_prefer_dark_theme_p,
                                GTK_STYLE_EXT_SYS_PREFER_DARK_THEME_P_DOC, NULL);
   env->funcall(env, fset, 2, args);
+
+  // Constants
+
+  make_int_constants(env, 5, (struct constant_int[]){
+      {"gtk-style-ext-sys-provider-priority-fallback", GTK_STYLE_PROVIDER_PRIORITY_FALLBACK},
+      {"gtk-style-ext-sys-provider-priority-theme", GTK_STYLE_PROVIDER_PRIORITY_THEME},
+      {"gtk-style-ext-sys-provider-priority-settings", GTK_STYLE_PROVIDER_PRIORITY_SETTINGS},
+      {"gtk-style-ext-sys-provider-priority-application", GTK_STYLE_PROVIDER_PRIORITY_APPLICATION},
+      {"gtk-style-ext-sys-provider-priority-user", GTK_STYLE_PROVIDER_PRIORITY_USER}
+    });
+
+  // Module
 
   emacs_value provide = env->intern(env, "provide");
   emacs_value gtk_style_ext_sys = env->intern(env, "gtk-style-ext-sys");

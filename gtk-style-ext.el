@@ -28,7 +28,11 @@
 ;;;###autoload
 (defun gtk-style-ext-load-from-string (string)
   "Load gtk CSS from STRING."
-  (gtk-style-ext-sys-load-from-string string))
+  (let ((provider (gtk-style-ext-sys-create-provider)))
+    (gtk-style-ext-sys-provider-load-from-string provider string)
+    (gtk-style-ext-sys-provider-activate
+     provider
+     gtk-style-ext-sys-provider-priority-application)))
 
 
 ;;;###autoload
@@ -37,7 +41,6 @@
   (with-temp-buffer
     (insert-file-contents-literally path)
     (gtk-style-ext-load-from-string (buffer-string))))
-
 
 ;;;###autoload
 (define-minor-mode gtk-style-ext-dark-theme-mode
