@@ -44,6 +44,11 @@ AS_IF([test "x$EMACS_SOURCES" = "x"],
      [AC_MSG_FAILURE([could not find Emacs for automatic source code location. To specify source code location manually run ./configure EMACS_SOURCES=path-to-emacs-sources.])])],
   [])
 
+AC_ARG_ENABLE([debug],
+  AS_HELP_STRING([--enable-debug], [enable extra debugging functionality]),
+  [AC_DEFINE([DEBUG])],
+  [])
+
 AC_MSG_NOTICE([Emacs source code path: $EMACS_SOURCES])
 AC_MSG_NOTICE([library installation path: $libdir])
 AC_MSG_NOTICE([lisp installation path: $lispdir])

@@ -42,6 +42,7 @@
     (insert-file-contents-literally path)
     (gtk-style-ext-load-from-string (buffer-string))))
 
+
 ;;;###autoload
 (define-minor-mode gtk-style-ext-dark-theme-mode
   "Toggle preference for Gtk's dark theme variant.
@@ -53,6 +54,34 @@ This command applies to all frames that exist and frames to be
 created in the future."
   :variable ((gtk-style-ext-sys-prefer-dark-theme-p)
              . (lambda (v) (gtk-style-ext-sys-prefer-dark-theme v))))
+
+
+(defun gtk-style-ext--update-theme (&rest args)
+  (let* ((mode-line-foreground (face-foreground 'mode-line))
+         (mode-line-background (face-background 'mode-line))
+         (sheet (format "menubar { color: %s; background: %s; }"
+                        mode-line-foreground
+                        mode-line-background)))
+    (gtk-style-ext-load-from-string sheet)))
+
+
+;; TODO: Maybe reset styles after disabling.
+;;;###autoload
+(define-minor-mode gtk-style-ext-adapt-to-theme-mode
+  "Adapt Gtk's colors to current Emacs theme.
+With a prefix argument ARG, enable Dark Theme mode if ARG is
+positive, and disable it otherwise. If called from Lisp, enable
+the mode if ARG is omitted or nil.
+
+This command applies to all frames that exist and frames to be
+created in the future."
+  :lighter " adapt"
+  :global t
+  (if gtk-style-ext-adapt-to-theme-mode
+      (progn
+        (gtk-style-ext--update-theme)
+        (advice-add 'load-theme :after #'gtk-style-ext--update-theme))
+    (advice-remove 'load-theme #'gtk-style-ext--update-theme)))
 
 
 (provide 'gtk-style-ext)

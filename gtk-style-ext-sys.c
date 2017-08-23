@@ -19,6 +19,9 @@ Boston, MA 02111-1307, USA. */
 
 #include <stdlib.h>
 #include <stdbool.h>
+#ifdef DEBUG
+#include <stdio.h>
+#endif
 
 #include <gtk/gtk.h>
 #include <emacs-module.h>
@@ -83,6 +86,9 @@ static emacs_value gtk_style_ext_sys_prefer_dark_theme_p(emacs_env *env,
 // Style Provider
 
 static void provider_unref(void *ptr) {
+  #ifdef DEBUG
+  fprintf(stderr, "%s: executed finalizer for provider at %p\n", PACKAGE_NAME, ptr);
+  #endif
   g_hash_table_remove(providers, ptr);
   g_object_unref(ptr);
 }
