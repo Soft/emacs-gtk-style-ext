@@ -22,6 +22,7 @@
 ;; the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 ;; Boston, MA 02111-1307, USA.
 
+(require 'cl-lib)
 (require 'gtk-style-ext-sys)
 
 
@@ -57,12 +58,34 @@ created in the future."
 
 
 (defun gtk-style-ext--update-theme (&rest args)
-  (let* ((mode-line-foreground (face-foreground 'mode-line))
-         (mode-line-background (face-background 'mode-line))
-         (sheet (format "menubar { color: %s; background: %s; }"
-                        mode-line-foreground
-                        mode-line-background)))
+  (let ((sheet (concat (gtk-style-ext--face-to-css "menubar" 'mode-line)
+                       (gtk-style-ext--face-to-css "menu" 'menu))))
     (gtk-style-ext-load-from-string sheet)))
+
+
+(defun gtk-style-ext--face-to-css (selector face)
+  (gtk-style-ext--property-list-to-string
+   selector
+   (gtk-style-ext--face-to-property-list face)))
+
+
+(defun gtk-style-ext--property-list-to-string (selector properties)
+  (format "%s { %s }"
+          selector
+          (mapconcat (lambda (p) (format "%s: %s" (car p) (cdr p)))
+                     properties
+                     "; ")))
+
+
+(defun gtk-style-ext--face-to-property-list (face)
+  (cl-loop
+   for (attr . nil) in (face-all-attributes face) ; Somehow this seem to list all the values as unspecified.
+   for value = (face-attribute face attr)
+   unless (eq value 'unspecified)
+   append
+   (pcase attr
+     (:foreground `(("color" . ,value)))
+     (:background `(("background-color" . ,value))))))
 
 
 ;; TODO: Maybe reset styles after disabling.
