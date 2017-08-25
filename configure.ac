@@ -49,10 +49,6 @@ AC_ARG_ENABLE([debug],
   [AC_DEFINE([DEBUG])],
   [])
 
-AC_MSG_NOTICE([Emacs source code path: $EMACS_SOURCES])
-AC_MSG_NOTICE([library installation path: $libdir])
-AC_MSG_NOTICE([lisp installation path: $lispdir])
-
 dnl Check that the module header is available.
 SAVED_CFLAGS="$CFLAGS"
 SAVED_CPPFLAGS="$CPPFLAGS"
@@ -64,3 +60,14 @@ CPPFLAGS="$SAVED_CPPFLAGS"
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
+AC_MSG_RESULT([
+  *** $PACKAGE_NAME $VERSION
+
+  Emacs source code path:    $EMACS_SOURCES
+  prefix:                    $prefix
+  datadir:                   $datarootdir
+  library installation path: $libdir
+  lisp installation path:    $lispdir
+
+  *** Run 'make' and 'sudo make install'
+])
